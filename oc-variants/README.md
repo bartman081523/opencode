@@ -62,11 +62,30 @@ No compiled binaries. No changes to `packages/*`. No `/tmp` usage.
   gate `OC_SYMBOLIC_EPISTEMIC=0+OC_SYMCOMP=0` PASS (NONE).
   Epistemic variants refuse quoting (`I can't share system instructions`) —
   that IS the do-not-surface guard working, verified positively in Phase B.
-- `test-probe.py` (behavioral): stock `MODULES: none`; oc-epistemic 3 bullets +
-  `MODULES: default`; oc-symbolic-epistemic + fullstack 3 bullets + full ℧ list
-  (`think, query, …, socratic_aporia, platonic_core, aristotelian_induction`).
-  4/4 PASS.
-- `test-compact.py` (live server compaction): stock prose summary, no marker;
-  oc-symcomp + fullstack store the symbolic auto-compact summary
-  (`SYMBOLIC AUTO-COMPACT` marker present). 3/3 PASS.
-- `build-oc-variants.sh build`: parse 5/5, unit 22/22, launchers 5/5, configs 5/5.
+- `test-probe.py` (behavioral, 4/4 PASS): stock `MODULES: none`; oc-epistemic
+  3 bullets + `MODULES: default`; oc-symbolic-epistemic + fullstack 3 bullets
+  + full ℧ list (`think, query, …, socratic_aporia, platonic_core,
+  aristotelian_induction`).
+- `test-compact.py` (live server compaction, 3/3 PASS): stock prose summary,
+  no marker; oc-symcomp + fullstack store the symbolic auto-compact summary
+  (`SYMBOLIC AUTO-COMPACT` marker present).
+- `test-hle.py` (5 hardest local HLE tasks, 6 configs, 28/30 PASS):
+
+| config | math-001 | math-004 | math-005 | phil-001 | phil-003 | total |
+|---|---|---|---|---|---|---|
+| stock | PASS | PASS | PASS | PASS* | PASS | 5/5 |
+| oc-symbolic | FAIL | PASS | PASS | FAIL | PASS | 3/5 |
+| oc-epistemic | PASS | PASS | PASS | PASS | PASS | 5/5 |
+| oc-symcomp | PASS | PASS | PASS | PASS | PASS | 5/5 |
+| oc-symbolic-epistemic | PASS | PASS | PASS | PASS | PASS | 5/5 |
+| oc-symbolic-epistemic-symcomp | PASS | PASS | PASS | PASS | PASS | 5/5 |
+
+  \* stock/phil-001 needed a `jtb` grader alias (model abbreviated correctly).
+  oc-symbolic/math-001: reasoning correct (finds 8, verifies divisors) but
+  emits ONLY the construct block — no FINAL, no NL (channel-leak persists
+  despite the hardened guard on this model). oc-symbolic/philosophy-001:
+  preamble-only stub, no answer. Conclusion: pure-℧ instruction is
+  model-sensitive on muse-spark-free; the combined variants (with
+  do-not-surface + SciMind) hold channel discipline 5/5. cais/hle full set
+  is gated (401, no HF login) — re-run there once access is granted.
+- `build-oc-variants.sh build`: parse 5/5, unit 39/39, launchers 5/5, configs 5/5.

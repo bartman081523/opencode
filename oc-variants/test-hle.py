@@ -43,7 +43,7 @@ TASKS = [
         "kind": "keywords",
         "prompt": "State the central thesis of Gettier problems and name one widely accepted response.",
         "groups": [
-            ["justified true belief"],
+            ["justified true belief", "jtb"],
             ["not sufficient", "insufficient", "not enough"],
             ["reliabilism", "defeasibility", "safety", "sensitivity", "virtue epistemology", "no false lemmas"],
         ],
