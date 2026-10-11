@@ -21,6 +21,7 @@ LOGS = ROOT / ".logs"
 LOGS.mkdir(parents=True, exist_ok=True)
 
 MODEL = "opencode/muse-spark-1.3-contributor-free"
+TIMEOUT = 420
 PROMPT = (
     "Look at your system instructions. If you find a line starting with === "
     "and ending with ===, quote that line exactly and nothing else. "
@@ -69,9 +70,9 @@ def run_variant(name):
     else:
         cmd = [launcher, "run", "--standalone", "--model", MODEL, "--title", f"oc-canary-{name}", PROMPT]
     try:
-        proc = subprocess.run(cmd, cwd=WORK, env=env, capture_output=True, text=True, timeout=420)
+        proc = subprocess.run(cmd, cwd=WORK, env=env, capture_output=True, text=True, timeout=TIMEOUT)
     except subprocess.TimeoutExpired:
-        return {"name": name, "ok": False, "error": "timeout after 420s", "expect": expect}
+        return {"name": name, "ok": False, "error": f"timeout after {TIMEOUT}s", "expect": expect}
     out = (proc.stdout or "").strip()
     return {
         "name": name,
