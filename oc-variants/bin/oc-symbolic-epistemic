@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# oc-symbolic-epistemic — WICHTIGSTE Variante: ℧ notation + epistemic dialog.
+# Port of symbolic-only SYMBOLIC_NOTATION + symbolic-only-epistemic
+# EPISTEMIC_PREAMBLE + scimind_mandates.py SciMind 5.0, combined in one hook.
+# Plugin: oc-variants/plugins/oc-symbolic-epistemic.
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VARIANT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$VARIANT_ROOT/plugins/oc-symbolic-epistemic"
+LOG_DIR="$VARIANT_ROOT/.logs"
+mkdir -p "$LOG_DIR"
+
+export OC_SYMBOLIC_EPISTEMIC="${OC_SYMBOLIC_EPISTEMIC:-1}"
+export OC_SYMBOLIC="${OC_SYMBOLIC:-1}"
+export OC_EPISTEMIC="${OC_EPISTEMIC:-1}"
+export OC_SCIMIND="${OC_SCIMIND:-1}"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat >&2 <<'EOF'
+oc-symbolic-epistemic — OpenCode with ℧ notation + epistemic dialog + SciMind.
+
+Usage:
+  oc-symbolic-epistemic [opencode-args...]
+
+Env (all default ON, set =0 to disable surgically):
+  OC_SYMBOLIC_EPISTEMIC=1  master switch
+  OC_SYMBOLIC=1            ℧ notation part
+  OC_EPISTEMIC=1           3-move dialog + do-not-surface part
+  OC_SCIMIND=1             SciMind 5.0 mandates part
+  OC_DEBUG=1               log to oc-variants/.logs/oc-symbolic-epistemic.log
+
+Examples:
+  oc-symbolic-epistemic
+  OC_SCIMIND=0 oc-symbolic-epistemic        # without mandates
+  OC_SYMBOLIC_EPISTEMIC=0 oc-symbolic-epistemic  # stock passthrough
+EOF
+  exit 0
+fi
+
+CONFIG_JSON="$(python3 -c "import json; print(json.dumps({'plugins': ['$PLUGIN_DIR']}))")"
+if [[ -z "${OPENCODE_CONFIG_CONTENT:-}" ]]; then
+  export OPENCODE_CONFIG_CONTENT="$CONFIG_JSON"
+fi
+if [[ "${OC_DEBUG:-0}" == "1" ]]; then
+  echo "[oc-symbolic-epistemic] plugin=$PLUGIN_DIR master=$OC_SYMBOLIC_EPISTEMIC args=$*" >> "$LOG_DIR/oc-symbolic-epistemic.log"
+fi
+exec opencode "$@"

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# oc-epistemic — OpenCode launcher for the single-prompt epistemic build.
+# Port of claude-code `symbolic-only-epistemic` (HEAD gen_patch.py, reduced
+# EPISTEMIC_PREAMBLE 1129 chars + do-not-surface note).
+# Plugin: oc-variants/plugins/oc-epistemic (context hook).
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VARIANT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$VARIANT_ROOT/plugins/oc-epistemic"
+LOG_DIR="$VARIANT_ROOT/.logs"
+mkdir -p "$LOG_DIR"
+
+export OC_EPISTEMIC="${OC_EPISTEMIC:-1}"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat >&2 <<'EOF'
+oc-epistemic — OpenCode with inner epistemic dialog (aporia / ideal / critique).
+
+Usage:
+  oc-epistemic [opencode-args...]
+
+Env:
+  OC_EPISTEMIC=1   dialog injection on (0 = stock)
+  OC_DEBUG=1       log to oc-variants/.logs/oc-epistemic.log
+
+Examples:
+  oc-epistemic
+  OC_EPISTEMIC=0 oc-epistemic   # stock passthrough
+EOF
+  exit 0
+fi
+
+CONFIG_JSON="$(python3 -c "import json; print(json.dumps({'plugins': ['$PLUGIN_DIR']}))")"
+if [[ -z "${OPENCODE_CONFIG_CONTENT:-}" ]]; then
+  export OPENCODE_CONFIG_CONTENT="$CONFIG_JSON"
+fi
+if [[ "${OC_DEBUG:-0}" == "1" ]]; then
+  echo "[oc-epistemic] plugin=$PLUGIN_DIR args=$*" >> "$LOG_DIR/oc-epistemic.log"
+fi
+exec opencode "$@"

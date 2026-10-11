@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# oc-symbolic-epistemic-symcomp — full stack: symbolic-epistemic + symcomp.
+# Context half = oc-symbolic-epistemic, compaction half = oc-symcomp.
+# Plugin: oc-variants/plugins/oc-symbolic-epistemic-symcomp.
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VARIANT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$VARIANT_ROOT/plugins/oc-symbolic-epistemic-symcomp"
+LOG_DIR="$VARIANT_ROOT/.logs"
+mkdir -p "$LOG_DIR"
+
+export OC_SYMBOLIC_EPISTEMIC="${OC_SYMBOLIC_EPISTEMIC:-1}"
+export OC_SYMBOLIC="${OC_SYMBOLIC:-1}"
+export OC_EPISTEMIC="${OC_EPISTEMIC:-1}"
+export OC_SCIMIND="${OC_SCIMIND:-1}"
+export OC_SYMCOMP="${OC_SYMCOMP:-1}"
+export OC_SYMCOMP_MAX_BYTES="${OC_SYMCOMP_MAX_BYTES:-24576}"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat >&2 <<'EOF'
+oc-symbolic-epistemic-symcomp — full stack (℧ + epistemic + SciMind + symcomp).
+
+Usage:
+  oc-symbolic-epistemic-symcomp [opencode-args...]
+
+Env:
+  OC_SYMBOLIC_EPISTEMIC=1  context master (0 = no context injection)
+  OC_SYMBOLIC/OC_EPISTEMIC/OC_SCIMIND  context parts (default 1)
+  OC_SYMCOMP=1             symcomp on (0 = stock summary)
+  OC_SYMCOMP_MERMAID=1     mermaid in compact prompt (off default)
+  OC_SYMCOMP_MAX_BYTES=N   prior-construct cap (default 24576)
+  OC_DEBUG=1               log to oc-variants/.logs/oc-symbolic-epistemic-symcomp.log
+
+Examples:
+  oc-symbolic-epistemic-symcomp
+  OC_SYMCOMP_MERMAID=1 oc-symbolic-epistemic-symcomp
+  OC_SYMCOMP=0 oc-symbolic-epistemic-symcomp   # context only, stock compact
+EOF
+  exit 0
+fi
+
+CONFIG_JSON="$(python3 -c "import json; print(json.dumps({'plugins': ['$PLUGIN_DIR'], 'compaction': {'auto': True, 'keep': {'tokens': 15000}, 'buffer': 20000}}))")"
+if [[ -z "${OPENCODE_CONFIG_CONTENT:-}" ]]; then
+  export OPENCODE_CONFIG_CONTENT="$CONFIG_JSON"
+fi
+if [[ "${OC_DEBUG:-0}" == "1" ]]; then
+  echo "[fullstack] plugin=$PLUGIN_DIR ctx=$OC_SYMBOLIC_EPISTEMIC symcomp=$OC_SYMCOMP args=$*" >> "$LOG_DIR/oc-symbolic-epistemic-symcomp.log"
+fi
+exec opencode "$@"

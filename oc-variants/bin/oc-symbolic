@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# oc-symbolic — OpenCode launcher for the symbolic ℧-notation build.
+# Port of claude-code `symbolic-only` (3-stage ℧ channel, DESIGN.md v3).
+# Plugin: oc-variants/plugins/oc-symbolic (context hook, SYMBOLIC_NOTATION).
+# No binary patch; surgical opt-out via OC_SYMBOLIC=0.
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VARIANT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$VARIANT_ROOT/plugins/oc-symbolic"
+LOG_DIR="$VARIANT_ROOT/.logs"
+mkdir -p "$LOG_DIR"
+
+export OC_SYMBOLIC="${OC_SYMBOLIC:-1}"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat >&2 <<'EOF'
+oc-symbolic — OpenCode with ℧ symbolic-notation system preamble.
+
+Usage:
+  oc-symbolic [opencode-args...]
+
+Env:
+  OC_SYMBOLIC=1        notation injection on (0 = stock)
+  OC_DEBUG=1           log hook activity to oc-variants/.logs/oc-symbolic.log
+  OPENCODE_CONFIG_CONTENT  merged over launcher config (advanced override)
+
+Examples:
+  oc-symbolic
+  oc-symbolic run "refactor X"
+  OC_SYMBOLIC=0 oc-symbolic   # stock passthrough
+EOF
+  exit 0
+fi
+
+CONFIG_JSON="$(python3 -c "import json; print(json.dumps({'plugins': ['$PLUGIN_DIR']}))")"
+if [[ -n "${OPENCODE_CONFIG_CONTENT:-}" ]]; then
+  CONFIG_JSON="$OPENCODE_CONFIG_CONTENT"
+else
+  export OPENCODE_CONFIG_CONTENT="$CONFIG_JSON"
+fi
+if [[ "${OC_DEBUG:-0}" == "1" ]]; then
+  echo "[oc-symbolic] plugin=$PLUGIN_DIR config=$OPENCODE_CONFIG_CONTENT args=$*" >> "$LOG_DIR/oc-symbolic.log"
+fi
+exec opencode "$@"

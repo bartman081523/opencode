@@ -1,0 +1,4 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["oc-variants/plugins/oc-symbolic-epistemic"]
+}
