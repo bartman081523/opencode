@@ -31,7 +31,7 @@ VARIANTS = {
     # name: (plugin_dir or None, env_overrides, expect_substring or "NONE")
     "stock": (None, {}, "NONE"),
     "oc-symbolic": ("plugins/oc-symbolic", {"OC_SYMBOLIC": "1"}, "oc-symbolic ("),
-    "oc-epistemic": ("plugins/oc-epistemic", {"OC_EPISTEMIC": "1"}, "cc-symbolic (cc-symbolic reasoning mode)"),
+    "oc-epistemic": ("plugins/oc-epistemic", {"OC_EPISTEMIC": "1"}, "oc-epistemic (epistemic reasoning mode)"),
     "oc-symcomp": ("plugins/oc-symcomp", {"OC_SYMCOMP": "1"}, "NONE"),
     "oc-symbolic-epistemic": (
         "plugins/oc-symbolic-epistemic",

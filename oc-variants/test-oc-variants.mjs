@@ -211,4 +211,174 @@ for (const dir of ["oc-symcomp", "oc-symbolic-epistemic-symcomp"]) {
   })
 }
 
+// --- env-gate matrix (surgical opt-out per variant) ---
+async function driveContext(dir, env) {
+  const saved = {}
+  for (const [k, v] of Object.entries(env)) {
+    saved[k] = process.env[k]
+    if (v === undefined) delete process.env[k]
+    else process.env[k] = v
+  }
+  try {
+    const plugin = await loadPlugin(dir)
+    const ctx = makeCtx()
+    await plugin.setup(ctx)
+    const ev = { system: [], tools: {}, options: {} }
+    for (const fn of ctx.hooks["context"] ?? []) await fn(ev)
+    return ev.system.map((s) => s.text).join("\n")
+  } finally {
+    for (const k of Object.keys(env)) {
+      if (saved[k] === undefined) delete process.env[k]
+      else process.env[k] = saved[k]
+    }
+  }
+}
+
+async function driveCompaction(dir, env, messages) {
+  const saved = {}
+  for (const [k, v] of Object.entries(env)) {
+    saved[k] = process.env[k]
+    if (v === undefined) delete process.env[k]
+    else process.env[k] = v
+  }
+  try {
+    const plugin = await loadPlugin(dir)
+    const ctx = makeCtx()
+    await plugin.setup(ctx)
+    const ev = { system: [], tools: {}, options: {}, messages }
+    for (const fn of ctx.hooks["compaction"] ?? []) await fn(ev)
+    return ev.result?.summary ?? null
+  } finally {
+    for (const k of Object.keys(env)) {
+      if (saved[k] === undefined) delete process.env[k]
+      else process.env[k] = saved[k]
+    }
+  }
+}
+
+{
+  const off = await driveContext("oc-symbolic", { OC_SYMBOLIC: "0" })
+  check("gate oc-symbolic OC_SYMBOLIC=0 injects nothing", () => {
+    assert.equal(off, "")
+  })
+  const on = await driveContext("oc-symbolic", { OC_SYMBOLIC: undefined })
+  check("gate oc-symbolic default-on includes channel guard", () => {
+    assert.ok(on.includes("CHANNEL_GUARD") || on.includes("highest precedence"), "missing channel guard")
+    assert.ok(on.includes("NEVER emit <construct>"), "missing never-emit rule")
+  })
+}
+{
+  const off = await driveContext("oc-epistemic", { OC_EPISTEMIC: "0" })
+  check("gate oc-epistemic OC_EPISTEMIC=0 injects nothing", () => {
+    assert.equal(off, "")
+  })
+  const on = await driveContext("oc-epistemic", { OC_EPISTEMIC: undefined })
+  check("gate oc-epistemic header renamed to oc-epistemic", () => {
+    assert.ok(on.includes("=== oc-epistemic (epistemic reasoning mode) ==="), "header not renamed")
+    assert.ok(on.includes("operating inside oc-epistemic"), "body not renamed")
+    assert.ok(!on.includes("operating inside cc-symbolic"), "cc-symbolic leftover in body")
+  })
+}
+{
+  const master = await driveContext("oc-symbolic-epistemic", { OC_SYMBOLIC_EPISTEMIC: "0" })
+  check("gate symbolic-epistemic master=0 injects nothing", () => {
+    assert.equal(master, "")
+  })
+  const nosci = await driveContext("oc-symbolic-epistemic", { OC_SCIMIND: "0" })
+  check("gate symbolic-epistemic OC_SCIMIND=0 drops mandates only", () => {
+    assert.ok(nosci.includes("EPISTEMIC DIALOG"), "dialog missing")
+    assert.ok(!nosci.includes("SciMind"), "mandates leaked")
+  })
+  const noepi = await driveContext("oc-symbolic-epistemic", { OC_EPISTEMIC: "0" })
+  check("gate symbolic-epistemic OC_EPISTEMIC=0 drops dialog+surface-note", () => {
+    assert.ok(!noepi.includes("EPISTEMIC DIALOG"), "dialog leaked")
+  })
+}
+{
+  const off = await driveCompaction("oc-symcomp", { OC_SYMCOMP: "0" }, fakeMessages)
+  check("gate oc-symcomp OC_SYMCOMP=0 sets no result", () => {
+    assert.equal(off, null)
+  })
+  const tiny = await driveCompaction(
+    "oc-symcomp",
+    { OC_SYMCOMP_MAX_BYTES: "1500" },
+    [{ role: "assistant", content: [{ type: "text", text: "<construct>A</construct>" }] }],
+  )
+  check("symcomp tiny cap still yields one construct slot", () => {
+    assert.ok(tiny && tiny.includes("<construct"), "no construct in summary")
+  })
+  const bad = await driveCompaction(
+    "oc-symcomp",
+    { OC_SYMCOMP_MAX_BYTES: "garbage" },
+    [{ role: "assistant", content: [{ type: "text", text: "<construct>A</construct>" }] }],
+  )
+  check("symcomp invalid cap falls back to default", () => {
+    assert.ok(bad && bad.includes("<construct"), "no construct with bad cap")
+    assert.ok(!bad.includes("elided"), "unexpected elision at default cap")
+  })
+}
+
+// --- pure-logic edge cases ---
+check("collect: string-content assistant message", () => {
+  const r = collectConstructs([{ role: "assistant", content: "think <construct>S</construct> end" }])
+  assert.equal(r.constructs.length, 1)
+  assert.equal(r.constructs[0], "S")
+})
+
+check("collect: thinking-only block collected, order oldest-first", () => {
+  const r = collectConstructs([
+    { role: "assistant", content: [{ type: "thinking", thinking: "<construct>FIRST</construct>" }] },
+    { role: "assistant", content: [{ type: "text", text: "<construct>SECOND</construct>" }] },
+  ])
+  assert.deepEqual(r.constructs, ["FIRST", "SECOND"])
+})
+
+check("collect: malformed unclosed tag ignored", () => {
+  const r = collectConstructs([{ role: "assistant", content: [{ type: "text", text: "<construct>oops" }] }])
+  assert.equal(r.constructs.length, 0)
+})
+
+// mirror of renderMermaid in plugins/oc-symcomp (+fullstack): same algorithm,
+// tested here because @opencode/plugin only resolves inside the runtime.
+function renderMermaid(constructs) {
+  if (!constructs.length) return "```mermaid\ngraph LR\n  empty[\"(no prior constructs)\"]\n```"
+  const lines = ["```mermaid", "graph LR"]
+  for (let i = 0; i < constructs.length; i++) {
+    let label = String(constructs[i] ?? "")
+      .replace(/[^a-zA-Z0-9 _|]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+    if (label.length > 40) label = label.slice(0, 39) + "…"
+    if (!label) label = "(empty)"
+    label = label.replace(/"/g, '\\"')
+    lines.push(`  C${i}["${label}"]`)
+  }
+  for (let k = 0; k < constructs.length - 1; k++) lines.push(`  C${k} --> C${k + 1}`)
+  lines.push("```")
+  return lines.join("\n")
+}
+
+check("mermaid: empty renders placeholder node", () => {
+  const m = renderMermaid([])
+  assert.ok(m.includes('empty["(no prior constructs)"]'), "placeholder missing")
+})
+
+check("mermaid: chain arrows link consecutive constructs", () => {
+  const m = renderMermaid(["alpha state", "beta state"])
+  assert.ok(m.includes('C0["alpha state"]'), "node 0 missing")
+  assert.ok(m.includes("C0 --> C1"), "chain arrow missing")
+})
+
+check("mermaid: long labels truncated, quotes stripped", () => {
+  const m = renderMermaid(['x'.repeat(100) + '"quoted"'])
+  const line = m.split("\n").find((l) => l.startsWith("  C0"))
+  assert.ok(line.length <= 60, `label not truncated: ${line.length}`)
+  assert.ok(!line.includes('"quoted"'), "raw quotes leaked")
+})
+
+check("mermaid: non-ascii stripped for lexer safety", () => {
+  const m = renderMermaid(["℧.state ⇾ |1⟩"])
+  assert.ok(!m.includes("℧"), "non-ascii leaked into mermaid")
+})
+
 console.log(`\nall ${pass} tests passed`)

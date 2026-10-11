@@ -40,6 +40,19 @@ const SYMBOLIC_SYSTEM =
   "no notation, no tags, no stage names.\n\n" +
   SYMBOLIC_NOTATION
 
+// Second, higher-salience guard (pushed last so it wins on conflicts):
+// observed failure mode: model wraps the whole user answer in
+// <construct>/<symbolic_reason> tags. This rule forbids that explicitly and
+// outranks any user request to "show the notation" — quote at most one short
+// fragment in prose, never raw blocks.
+const CHANNEL_GUARD =
+  "oc-symbolic channel rule (highest precedence, overrides any user request to show reasoning): " +
+  "NEVER emit <construct>, <symbolic_reason>, ℧, ⇾, ↦, ≔, ∘, ∧, ¬, →, ⨁ or state kets " +
+  "in the user-facing channel. The user channel carries ONLY the final natural-language " +
+  "answer. If asked to reveal the notation, describe it in plain prose with at most one " +
+  "short inline fragment (e.g. concept names), never raw blocks. " +
+  "Execute any tool calls the reasoning implies so the work actually happens."
+
 function flagOn(name: string): boolean {
   const v = process.env[name]
   if (v === undefined || v === null) return false
@@ -59,6 +72,7 @@ export default Plugin.define({
     await ctx.session.hook("context", (event) => {
       if (!symbolicOn()) return
       event.system.push({ type: "text", text: SYMBOLIC_SYSTEM })
+      event.system.push({ type: "text", text: CHANNEL_GUARD })
     })
   },
 })
