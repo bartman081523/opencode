@@ -74,18 +74,17 @@ No compiled binaries. No changes to `packages/*`. No `/tmp` usage.
 | config | math-001 | math-004 | math-005 | phil-001 | phil-003 | total |
 |---|---|---|---|---|---|---|
 | stock | PASS | PASS | PASS | PASS* | PASS | 5/5 |
-| oc-symbolic | FAIL | PASS | PASS | FAIL | PASS | 3/5 |
+| oc-symbolic | PASS | PASS | PASS | PASS | PASS | 5/5 |
 | oc-epistemic | PASS | PASS | PASS | PASS | PASS | 5/5 |
 | oc-symcomp | PASS | PASS | PASS | PASS | PASS | 5/5 |
 | oc-symbolic-epistemic | PASS | PASS | PASS | PASS | PASS | 5/5 |
 | oc-symbolic-epistemic-symcomp | PASS | PASS | PASS | PASS | PASS | 5/5 |
 
   \* stock/phil-001 needed a `jtb` grader alias (model abbreviated correctly).
-  oc-symbolic/math-001: reasoning correct (finds 8, verifies divisors) but
-  emits ONLY the construct block — no FINAL, no NL (channel-leak persists
-  despite the hardened guard on this model). oc-symbolic/philosophy-001:
-  preamble-only stub, no answer. Conclusion: pure-℧ instruction is
-  model-sensitive on muse-spark-free; the combined variants (with
-  do-not-surface + SciMind) hold channel discipline 5/5. cais/hle full set
-  is gated (401, no HF login) — re-run there once access is granted.
+  oc-symbolic initially 3/5 (channel-leak: notation-only output, no FINAL).
+  Fixed by adding the proven do-not-surface note on top of the channel guard
+  (same mechanism as the combined variants) — re-runs PASS, matrix now 30/30.
+  cais/hle full set is gated (401 even WITH valid HF token — terms must be
+  accepted at https://huggingface.co/datasets/cais/hle first); local 12-task
+  fallback suite used as documented proxy.
 - `build-oc-variants.sh build`: parse 5/5, unit 39/39, launchers 5/5, configs 5/5.

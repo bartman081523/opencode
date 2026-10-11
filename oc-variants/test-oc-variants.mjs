@@ -263,8 +263,9 @@ async function driveCompaction(dir, env, messages) {
   })
   const on = await driveContext("oc-symbolic", { OC_SYMBOLIC: undefined })
   check("gate oc-symbolic default-on includes channel guard", () => {
-    assert.ok(on.includes("CHANNEL_GUARD") || on.includes("highest precedence"), "missing channel guard")
+    assert.ok(on.includes("highest precedence"), "missing channel guard")
     assert.ok(on.includes("NEVER emit <construct>"), "missing never-emit rule")
+    assert.ok(on.includes("oc-symbolic internal reasoning"), "missing do-not-surface note")
   })
 }
 {
