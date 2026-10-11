@@ -53,3 +53,20 @@ hook-logic tests (pure functions, no server needed) + validates each launcher
 is executable and each config is valid JSONC.
 
 No compiled binaries. No changes to `packages/*`. No `/tmp` usage.
+
+## Live tests (2026-10-11, model `opencode/muse-spark-1.3-contributor-free`)
+
+- `test-live.py` (canary): stock PASS (NONE); oc-symbolic PASS
+  (model answers in `<construct><symbolic_reason>℧…` notation);
+  oc-symcomp PASS (NONE by design, no context hook);
+  gate `OC_SYMBOLIC_EPISTEMIC=0+OC_SYMCOMP=0` PASS (NONE).
+  Epistemic variants refuse quoting (`I can't share system instructions`) —
+  that IS the do-not-surface guard working, verified positively in Phase B.
+- `test-probe.py` (behavioral): stock `MODULES: none`; oc-epistemic 3 bullets +
+  `MODULES: default`; oc-symbolic-epistemic + fullstack 3 bullets + full ℧ list
+  (`think, query, …, socratic_aporia, platonic_core, aristotelian_induction`).
+  4/4 PASS.
+- `test-compact.py` (live server compaction): stock prose summary, no marker;
+  oc-symcomp + fullstack store the symbolic auto-compact summary
+  (`SYMBOLIC AUTO-COMPACT` marker present). 3/3 PASS.
+- `build-oc-variants.sh build`: parse 5/5, unit 22/22, launchers 5/5, configs 5/5.
