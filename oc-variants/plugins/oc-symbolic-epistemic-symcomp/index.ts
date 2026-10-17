@@ -26,11 +26,11 @@ const SYMBOLIC_NOTATION =
 const EPISTEMIC_PREAMBLE =
   "=== oc-symbolic-epistemic-symcomp (symbolic + epistemic + symcomp) ===\n\n" +
   "Before answering, perform an inner EPISTEMIC DIALOG in your thinking channel. Three moves, in order:\n\n" +
-  "  1. SOKRATISCHE APORIE — name the assumption you cannot defend AND " +
+  "  1. SOCRATIC APORIA — name the assumption you cannot defend AND " +
   "what would falsify your answer. Surface uncertainty.\n" +
-  "  2. PLATONISCHER IDEAL-CHECK — name the universal principle or pattern " +
+  "  2. PLATONIC IDEAL-CHECK — name the universal principle or pattern " +
   "that grounds your answer. Mark groundless claims as such.\n" +
-  "  3. ARISTOTELISCHE SELF-CRITIQUE — name the evidence you have AND the " +
+  "  3. ARISTOTELIAN SELF-CRITIQUE — name the evidence you have AND the " +
   "evidence you lack. Enumerate observations, inferences, counterfactual tests.\n\n" +
   "Use the ℧ notation below for the dialog state; emit a one-line " +
   "`<construct>…</construct>` summary of the converged state in thinking. " +

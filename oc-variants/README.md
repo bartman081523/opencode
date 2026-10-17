@@ -28,7 +28,7 @@ What IS ported (reasoning content, provider-agnostic):
 | 1 | `oc-symbolic` | `symbolic-only` 3-stage (DECIDER→JUDGE→TRANSLATOR, ℧ channel) | `SYMBOLIC_NOTATION` system injection via `session.hook("context")`. Single-request (opencode has no in-binary 3-stage loop; the notation is the cached preamble, the model does the stages internally). |
 | 2 | `oc-epistemic` | `symbolic-only-epistemic` single-prompt | `EPISTEMIC_PREAMBLE` + do-not-surface note via `session.hook("context")`. |
 | 3 | `oc-symcomp` | `gen_patch_symcomp.py` auto-compact half | `session.hook("compaction")` merges `<construct>` blocks into one converged `<construct>` + follow-up next-action text (bdeb3f7a fix). Standalone, layers onto stock or any variant. |
-| 4 | `oc-symbolic-epistemic` (**wichtig**) | symbolic notation + epistemic dialog combined | `SYMBOLIC_NOTATION` + `EPISTEMIC_PREAMBLE` + do-not-surface, one `context` hook. |
+| 4 | `oc-symbolic-epistemic` (**most important**) | symbolic notation + epistemic dialog combined | `SYMBOLIC_NOTATION` + `EPISTEMIC_PREAMBLE` + do-not-surface, one `context` hook. |
 | 5 | `oc-symbolic-epistemic-symcomp` | full stack | variant 4 + variant 3 compaction hook. |
 
 Each variant: `plugins/<name>/index.ts` (self-contained, no imports beyond
@@ -88,3 +88,12 @@ No compiled binaries. No changes to `packages/*`. No `/tmp` usage.
   accepted at https://huggingface.co/datasets/cais/hle first); local 12-task
   fallback suite used as documented proxy.
 - `build-oc-variants.sh build`: parse 5/5, unit 39/39, launchers 5/5, configs 5/5.
+
+Provenance note (2026-10-17): the German word forms of the three dialog-move
+labels in the epistemic preambles (`SOKRATISCHE APORIE`, `PLATONISCHER
+IDEAL-CHECK`, `ARISTOTELISCHE SELF-CRITIQUE`) were translated to English
+(`SOCRATIC APORIA`, `PLATONIC IDEAL-CHECK`, `ARISTOTELIAN SELF-CRITIQUE`)
+after the matrix above was recorded — wording-only change; the upstream
+extracts under `source-extracts/` keep the German original, and the
+"1129-char" figure below describes that upstream constant, not the shipped
+oc string.

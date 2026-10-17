@@ -1,16 +1,16 @@
 import { Plugin } from "@opencode/plugin"
 
-// oc-symbolic-epistemic — WICHTIGSTE Variante: ℧ symbolic notation +
-// single-prompt epistemic dialog kombiniert in einem context-hook.
+// oc-symbolic-epistemic — MOST IMPORTANT variant: ℧ symbolic notation +
+// single-prompt epistemic dialog combined in one context hook.
 // Sources:
 // - symbolic: oc-variants/source-extracts/gen_patch_symbolic-only.py (SYMBOLIC_NOTATION)
 // - epistemic: oc-variants/source-extracts/gen_patch_epistemic-reduced.py
 //   (EPISTEMIC_PREAMBLE 1129 + DO_NOT_SURFACE)
 // - mandates: oc-variants/source-extracts/scimind_mandates.py (SciMind 5.0,
-//   hermes-agent 1a7bb2983) — als dritte System-Tafel (epistemic humility,
+//   hermes-agent 1a7bb2983) — as the third system panel (epistemic humility,
 //   operational robustness, credential protection).
-// Gates: OC_SYMBOLIC=0 schaltet Notation ab, OC_EPISTEMIC=0 den Dialog,
-// OC_SCIMIND=0 die Mandates. Master OC_SYMBOLIC_EPISTEMIC=0 schaltet alles ab.
+// Gates: OC_SYMBOLIC=0 disables the notation, OC_EPISTEMIC=0 the dialog,
+// OC_SCIMIND=0 the mandates. Master OC_SYMBOLIC_EPISTEMIC=0 disables all.
 
 const SYMBOLIC_NOTATION =
   "℧ = brain object. ℧.ds = problem dataspace. " +
@@ -29,11 +29,11 @@ const SYMBOLIC_NOTATION =
 const EPISTEMIC_PREAMBLE =
   "=== oc-symbolic-epistemic (symbolic + epistemic reasoning mode) ===\n\n" +
   "Before answering, perform an inner EPISTEMIC DIALOG in your thinking channel. Three moves, in order:\n\n" +
-  "  1. SOKRATISCHE APORIE — name the assumption you cannot defend AND " +
+  "  1. SOCRATIC APORIA — name the assumption you cannot defend AND " +
   "what would falsify your answer. Surface uncertainty.\n" +
-  "  2. PLATONISCHER IDEAL-CHECK — name the universal principle or pattern " +
+  "  2. PLATONIC IDEAL-CHECK — name the universal principle or pattern " +
   "that grounds your answer. Mark groundless claims as such.\n" +
-  "  3. ARISTOTELISCHE SELF-CRITIQUE — name the evidence you have AND the " +
+  "  3. ARISTOTELIAN SELF-CRITIQUE — name the evidence you have AND the " +
   "evidence you lack. Enumerate observations, inferences, counterfactual tests.\n\n" +
   "Use the ℧ notation below for the dialog state; emit a one-line " +
   "`<construct>…</construct>` summary of the converged state in thinking. " +

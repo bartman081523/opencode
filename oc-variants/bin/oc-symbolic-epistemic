@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# oc-symbolic-epistemic — WICHTIGSTE Variante: ℧ notation + epistemic dialog.
+# oc-symbolic-epistemic — MOST IMPORTANT variant: ℧ notation + epistemic dialog.
 # Port of symbolic-only SYMBOLIC_NOTATION + symbolic-only-epistemic
 # EPISTEMIC_PREAMBLE + scimind_mandates.py SciMind 5.0, combined in one hook.
 # Plugin: oc-variants/plugins/oc-symbolic-epistemic.
