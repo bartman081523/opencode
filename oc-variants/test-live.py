@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -52,6 +53,16 @@ VARIANTS = {
 }
 
 
+RATE_LIMIT_RETRIES = 6
+RATE_LIMIT_BASE_DELAY = 15
+RATE_LIMIT_MAX_DELAY = 300
+
+
+def _is_rate_limited(proc):
+    text = ((proc.stderr or "") + (proc.stdout or "")).lower()
+    return "rate limit" in text or "429" in proc.stderr or "too many requests" in text
+
+
 def run_variant(name):
     plugin_rel, env_over, expect = VARIANTS[name]
     env = dict(os.environ)
@@ -69,18 +80,36 @@ def run_variant(name):
         cmd = ["opencode", "run", "--standalone", "--model", MODEL, "--title", f"oc-canary-{name}", PROMPT]
     else:
         cmd = [launcher, "run", "--standalone", "--model", MODEL, "--title", f"oc-canary-{name}", PROMPT]
-    try:
-        proc = subprocess.run(cmd, cwd=WORK, env=env, capture_output=True, text=True, timeout=TIMEOUT)
-    except subprocess.TimeoutExpired:
-        return {"name": name, "ok": False, "error": f"timeout after {TIMEOUT}s", "expect": expect}
-    out = (proc.stdout or "").strip()
+    delay = RATE_LIMIT_BASE_DELAY
+    for attempt in range(1, RATE_LIMIT_RETRIES + 1):
+        try:
+            proc = subprocess.run(cmd, cwd=WORK, env=env, capture_output=True, text=True, timeout=TIMEOUT)
+        except subprocess.TimeoutExpired:
+            return {"name": name, "ok": False, "error": f"timeout after {TIMEOUT}s", "expect": expect}
+        out = (proc.stdout or "").strip()
+        if _is_rate_limited(proc):
+            print(f"[retry] {name}: rate-limited (attempt {attempt}/{RATE_LIMIT_RETRIES}); sleeping {delay}s", flush=True)
+            if attempt < RATE_LIMIT_RETRIES:
+                time.sleep(delay)
+                delay = min(delay * 2, RATE_LIMIT_MAX_DELAY)
+            continue
+        return {
+            "name": name,
+            "ok": proc.returncode == 0,
+            "exit": proc.returncode,
+            "stdout": out[:2000],
+            "stderr": (proc.stderr or "")[-1000:],
+            "expect": expect,
+            "attempt": attempt,
+        }
     return {
         "name": name,
-        "ok": proc.returncode == 0,
-        "exit": proc.returncode,
-        "stdout": out[:2000],
-        "stderr": (proc.stderr or "")[-1000:],
+        "ok": False,
+        "exit": 1,
+        "stdout": "",
+        "stderr": f"rate-limited {RATE_LIMIT_RETRIES}x; giving up",
         "expect": expect,
+        "attempt": RATE_LIMIT_RETRIES,
     }
 
 

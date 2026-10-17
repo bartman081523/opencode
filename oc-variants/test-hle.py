@@ -170,7 +170,7 @@ def main():
     if suite == "full":
         tasks = load_hlefull()
         results_name = "hle-full-results.json"
-        test_live.TIMEOUT = 600
+        test_live.TIMEOUT = 900
     else:
         tasks = TASKS
         results_name = "hle-results.json"
@@ -186,9 +186,6 @@ def main():
             print(f"[hle] running {cfg}/{task['id']} ...", flush=True)
             test_live.PROMPT = task["prompt"] + ("" if suite == "full" else SUFFIX)
             res = test_live.run_variant(cfg)
-            if not res.get("ok"):
-                print(f"[hle] retry {cfg}/{task['id']} after {res.get('exit')}/{str(res.get('error'))[:80]}", flush=True)
-                res = test_live.run_variant(cfg)
             out = res.get("stdout", "")
             ok, detail = grade(task, out) if res.get("ok") else (False, f"exit={res.get('exit')} err={(res.get('error') or res.get('stderr') or '')[:200]}")
             rec = {"config": cfg, "task": task["id"], "verdict": "PASS" if ok else ("ERROR" if not res.get("ok") else "FAIL"),
