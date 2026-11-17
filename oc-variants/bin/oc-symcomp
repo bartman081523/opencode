@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# oc-symcomp — OpenCode launcher for symbolic auto-compact.
+# Port of claude-code gen_patch_symcomp.py auto-compact half
+# (__symCollectConstructs + __symAutoCompactSystem + size cap + mermaid opt-in
+# + follow-up next-action text = bdeb3f7a fix). Standalone, layers onto stock.
+# Plugin: oc-variants/plugins/oc-symcomp (compaction hook).
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VARIANT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$VARIANT_ROOT/plugins/oc-symcomp"
+LOG_DIR="$VARIANT_ROOT/.logs"
+mkdir -p "$LOG_DIR"
+
+export OC_SYMCOMP="${OC_SYMCOMP:-1}"
+export OC_SYMCOMP_MAX_BYTES="${OC_SYMCOMP_MAX_BYTES:-24576}"
+# OC_SYMCOMP_MERMAID intentionally NOT defaulted (off unless user sets =1).
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat >&2 <<'EOF'
+oc-symcomp — OpenCode with symbolic auto-compact (merged <construct> summary).
+
+Usage:
+  oc-symcomp [opencode-args...]
+
+Env:
+  OC_SYMCOMP=1             symcomp on (0 = stock summary)
+  OC_SYMCOMP_MERMAID=1     add Mermaid rendering to compact prompt (off default)
+  OC_SYMCOMP_MAX_BYTES=N   prior-construct cap bytes (default 24576)
+  OC_DEBUG=1               log to oc-variants/.logs/oc-symcomp.log
+
+Examples:
+  oc-symcomp
+  OC_SYMCOMP_MERMAID=1 oc-symcomp
+  OC_SYMCOMP=0 oc-symcomp   # stock compaction
+EOF
+  exit 0
+fi
+
+CONFIG_JSON="$(python3 -c "import json; print(json.dumps({'plugins': ['$PLUGIN_DIR'], 'compaction': {'auto': True, 'keep': {'tokens': 15000}, 'buffer': 20000}}))")"
+if [[ -z "${OPENCODE_CONFIG_CONTENT:-}" ]]; then
+  export OPENCODE_CONFIG_CONTENT="$CONFIG_JSON"
+fi
+if [[ "${OC_DEBUG:-0}" == "1" ]]; then
+  echo "[oc-symcomp] plugin=$PLUGIN_DIR symcomp=$OC_SYMCOMP args=$*" >> "$LOG_DIR/oc-symcomp.log"
+fi
+exec opencode "$@"
