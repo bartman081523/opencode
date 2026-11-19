@@ -132,14 +132,17 @@ jobs:
           command -v rg && rg --version | head -1
 
       - name: Run unit tests
-        timeout-minutes: 20
+        timeout-minutes: 40
         run: |
           # The runners have four vCPUs, and each Bun test process performs its own concurrent work.
+          # Fork-only: the GitHub-hosted Windows runner chokes on process-spawn tests (bun run
+          # src/index.ts) under parallel turbo tasks, so Windows runs one task at a time.
+          CONCURRENCY=$([ "$RUNNER_OS" = "Windows" ] && echo 1 || echo 3)
           if [ "$AFFECTED" = "true" ]; then
-            GITHUB_ACTIONS=false bun turbo test --affected --concurrency=3
+            GITHUB_ACTIONS=false bun turbo test --affected --concurrency="$CONCURRENCY"
             exit 0
           fi
-          GITHUB_ACTIONS=false bun turbo test --concurrency=3
+          GITHUB_ACTIONS=false bun turbo test --concurrency="$CONCURRENCY"
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
 
